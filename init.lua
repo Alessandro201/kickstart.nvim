@@ -148,11 +148,31 @@ vim.opt.listchars = { tab = '» ', trail = '·', nbsp = '␣' }
 -- Preview substitutions live, as you type!
 vim.opt.inccommand = 'split'
 
+-- Show line length column
+vim.opt.colorcolumn = '120'
+
 -- Show which line your cursor is on
 vim.opt.cursorline = true
 
 -- Minimal number of screen lines to keep above and below the cursor.
 vim.opt.scrolloff = 10
+
+-- CUSTOM OPTIONS
+vim.opt.smarttab = true
+-- enter spaces when tab is pressed
+vim.opt.expandtab = true
+-- use 4 spaces to represent tab
+vim.opt.tabstop = 4
+vim.opt.softtabstop = 4
+
+-- Copy indent from current line when starting a new line
+vim.opt.autoindent = true
+-- number of spaces to use for auto indent
+vim.opt.shiftwidth = 4
+
+vim.opt.smartindent = true
+-- Make backspaces more powerfull
+vim.opt.backspace = 'indent,eol,start'
 
 -- [[ Basic Keymaps ]]
 --  See `:help vim.keymap.set()`
@@ -576,9 +596,7 @@ require('lazy').setup({
         -- clangd = {},
         -- gopls = {},
         -- pyright = {},
-        --
-        --
-        -- IT DOESN'T WORKKKKK WHYYYYYYY
+
         rust_analyzer = {
           -- DO NOT INSTALL rust-analyzer WITH MASON AS IT CAUSE CONFLICTS WITH THE SYSTEM INSTALLATION PREVENTING THE USE OF CLIPPY
           -- The cmd on the next line specify that it needs to use the rust-analyzer on $PATH
@@ -637,11 +655,14 @@ require('lazy').setup({
         'lua_ls',
 
         -- python Linter, Linter LSP, Static Checker
-        'ruff',
-        'ruff_lsp',
+        -- ruff should be installed globally, else uncomment the following lines
+        -- 'ruff',
+        -- 'ruff_lsp',
+        -- If it gived problems during the installation run "sudo apt-get install python3.12-venv"
+        'basedpyright',
 
         -- JSON, Javascript and Typescript LSP, Linter and formatter
-        'biome',
+        -- 'biome',
 
         -- CSS LSP and formatter
         'cssls',
@@ -656,8 +677,18 @@ require('lazy').setup({
         'gopls',
 
         -- SQL LSP and formatter
-        'sqlfluff',
-        'sqlfmt',
+        -- 'sqlfluff',
+        -- 'sqlfmt',
+        'sqls',
+        'sql-formatter',
+
+        -- Text and markdown
+        'vale',
+        'vale_ls',
+        'markdownlint',
+
+        -- toml
+        'taplo',
 
         -- Zig LSP
         'zls',
@@ -682,38 +713,70 @@ require('lazy').setup({
   { -- Autoformat
     'stevearc/conform.nvim',
     lazy = false,
+    -- event = { 'BufReadPre', 'BufNewFile' },
     keys = {
       {
         '<leader>f',
         function()
           require('conform').format { async = true, lsp_fallback = true }
         end,
-        mode = '',
-        desc = '[F]ormat buffer',
+        mode = { 'n', 'v' },
+        desc = '[F]ormat file or range (in visual mode)',
       },
     },
     opts = {
-      notify_on_error = false,
+      notify_on_error = true,
       format_on_save = function(bufnr)
         -- Disable "format_on_save lsp_fallback" for languages that don't
         -- have a well standardized coding style. You can add additional
         -- languages here or re-enable it for the disabled ones.
         local disable_filetypes = { c = true, cpp = true }
         return {
-          timeout_ms = 500,
+          timeout_ms = 1000,
           lsp_fallback = not disable_filetypes[vim.bo[bufnr].filetype],
         }
       end,
       formatters_by_ft = {
-        lua = { 'stylua' },
         -- Conform can also run multiple formatters sequentially
         -- python = { "isort", "black" },
         --
         -- You can use a sub-list to tell conform to run *until* a formatter
         -- is found.
         -- javascript = { { "prettierd", "prettier" } },
+
+        -- jq should be installed globally outside nvim
+        json = { { 'jq', 'prettierd' } },
+        yaml = { 'prettierd' },
+        markdown = { 'prettierd' },
+        css = { 'prettierd' },
+        xml = { 'xmlformatter' },
+        toml = { 'taplo' },
+        html = { 'prettierd' },
+
+        lua = { 'stylua' },
+        c = { 'clang-format' },
+        c_hash = { 'clang-format' },
+        cpp = { 'clang-format' },
+        java = { 'clang-format' },
+        javascript = { 'prettierd' },
+        typescript = { 'prettierd' },
+        go = { 'goimports', 'gofmt' },
+        python = { 'ruff_fix', 'ruff_organize_imports', 'ruff_format' },
       },
-      python = { { 'ruff', 'isort' } },
+
+      -- formatters = {
+      --   system_ruff = {
+      --     command = 'ruff',
+      --     args = { 'format', '--stdin-filename', '$FILENAME' },
+      --     range_args = function(self, ctx)
+      --       return { '--range=', ctx.range.start[1] .. '-' .. ctx.range['end'][1] }
+      --     end,
+      --     stdin = true,
+      --     condition = function(self, ctx)
+      --       return vim.fs.basename(ctx.filename):match '^.+%.py$'
+      --     end,
+      --   },
+      -- },
     },
   },
 
@@ -962,6 +1025,8 @@ require('lazy').setup({
     },
   },
 })
+
+require 'custom.remap'
 
 -- The line beneath this is called `modeline`. See `:help modeline`
 -- vim: ts=2 sts=2 sw=2 et
