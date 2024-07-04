@@ -499,6 +499,10 @@ require('lazy').setup({
           --  To jump back, press <C-t>.
           map('gd', require('telescope.builtin').lsp_definitions, '[G]oto [D]efinition')
 
+          -- This is not Goto Definition, this is Goto Declaration.
+          --  For example, in C this would take you to the header.
+          map('gD', vim.lsp.buf.declaration, '[G]oto [D]eclaration')
+
           -- Find references for the word under your cursor.
           map('gr', require('telescope.builtin').lsp_references, '[G]oto [R]eferences')
 
@@ -530,10 +534,6 @@ require('lazy').setup({
           -- Opens a popup that displays documentation about the word under your cursor
           --  See `:help K` for why this keymap.
           map('K', vim.lsp.buf.hover, 'Hover Documentation')
-
-          -- WARN: This is not Goto Definition, this is Goto Declaration.
-          --  For example, in C this would take you to the header.
-          map('gD', vim.lsp.buf.declaration, '[G]oto [D]eclaration')
 
           -- The following two autocommands are used to highlight references of the
           -- word under your cursor when your cursor rests there for a little while.
@@ -752,6 +752,7 @@ require('lazy').setup({
         xml = { 'xmlformatter' },
         toml = { 'taplo' },
         html = { 'prettierd' },
+        sql = { 'sqlfmt' },
 
         lua = { 'stylua' },
         c = { 'clang-format' },
@@ -761,22 +762,28 @@ require('lazy').setup({
         javascript = { 'prettierd' },
         typescript = { 'prettierd' },
         go = { 'goimports', 'gofmt' },
-        python = { 'ruff_fix', 'ruff_organize_imports', 'ruff_format' },
+        python = { 'ruff_orgnize_import', 'ruff_format' },
       },
 
-      -- formatters = {
-      --   system_ruff = {
-      --     command = 'ruff',
-      --     args = { 'format', '--stdin-filename', '$FILENAME' },
-      --     range_args = function(self, ctx)
-      --       return { '--range=', ctx.range.start[1] .. '-' .. ctx.range['end'][1] }
-      --     end,
-      --     stdin = true,
-      --     condition = function(self, ctx)
-      --       return vim.fs.basename(ctx.filename):match '^.+%.py$'
-      --     end,
-      --   },
-      -- },
+      formatters = {
+        ruff_fmt = {
+          prepend_args = {
+            '--line-length=150',
+            '--target-version=py312',
+          },
+        },
+        -- system_ruff = {
+        --   command = 'ruff',
+        --   args = { 'format', '--stdin-filename', '$FILENAME' },
+        --   range_args = function(self, ctx)
+        --     return { '--range=', ctx.range.start[1] .. '-' .. ctx.range['end'][1] }
+        --   end,
+        --   stdin = true,
+        --   condition = function(self, ctx)
+        --     return vim.fs.basename(ctx.filename):match '^.+%.py$'
+        --   end,
+        -- },
+      },
     },
   },
 
