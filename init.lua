@@ -622,6 +622,13 @@ require('lazy').setup({
             },
           },
         },
+
+        -- jedi_language_server = {
+        --   filetypes = { 'py', 'pyc', 'python' },
+        --   cmd = {
+        --     'jedi-language-server',
+        --   },
+        -- },
         -- ... etc. See `:help lspconfig-all` for a list of all the pre-configured LSPs
         --
         -- Some languages (like typescript) have entire language plugins that can be useful:
@@ -630,6 +637,9 @@ require('lazy').setup({
         -- But for many setups, the LSP (`tsserver`) will work just fine
         -- tsserver = {},
         --
+        groovyls = {
+          filetypes = { 'groovy', 'nf' },
+        },
 
         lua_ls = {
           -- cmd = {...},
@@ -668,7 +678,8 @@ require('lazy').setup({
         -- 'ruff',
         -- 'ruff_lsp',
         -- If it gived problems during the installation run "sudo apt-get install python3.12-venv"
-        'basedpyright',
+        -- 'basedpyright',
+        -- 'jedi_language_server',
 
         -- JSON, Javascript and Typescript LSP, Linter and formatter
         -- 'biome',
@@ -735,16 +746,16 @@ require('lazy').setup({
     },
     opts = {
       notify_on_error = true,
-      format_on_save = function(bufnr)
-        -- Disable "format_on_save lsp_fallback" for languages that don't
-        -- have a well standardized coding style. You can add additional
-        -- languages here or re-enable it for the disabled ones.
-        local disable_filetypes = { c = true, cpp = true }
-        return {
-          timeout_ms = 1000,
-          lsp_fallback = not disable_filetypes[vim.bo[bufnr].filetype],
-        }
-      end,
+      -- format_on_save = function(bufnr)
+      --   -- Disable "format_on_save lsp_fallback" for languages that don't
+      --   -- have a well standardized coding style. You can add additional
+      --   -- languages here or re-enable it for the disabled ones.
+      --   local disable_filetypes = { c = true, cpp = true }
+      --   return {
+      --     timeout_ms = 1000,
+      --     lsp_fallback = not disable_filetypes[vim.bo[bufnr].filetype],
+      --   }
+      -- end,
       formatters_by_ft = {
         lua = { 'stylua' },
         -- Conform can also run multiple formatters sequentially
@@ -763,6 +774,7 @@ require('lazy').setup({
         toml = { 'taplo' },
         html = { 'prettierd' },
         sql = { 'sqlfmt' },
+        groovy = { 'npm-groovy-lint' },
 
         lua = { 'stylua' },
         c = { 'clang-format' },
@@ -1049,6 +1061,7 @@ require('lazy').setup({
 })
 
 require 'custom.remap'
+require 'custom.ftdetect'
 
 -- The line beneath this is called `modeline`. See `:help modeline`
 -- vim: ts=2 sts=2 sw=2 et
