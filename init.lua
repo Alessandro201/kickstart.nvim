@@ -777,9 +777,8 @@ require('lazy').setup({
       -- end,
       format_on_save = false,
       formatters_by_ft = {
-        -- Conform can also run multiple formatters sequentially
-        -- python = { "isort", "black" },
-
+        -- You can use 'stop_after_first' to run the first available formatter from the list
+        -- javascript = { "prettierd", "prettier", stop_after_first = true },
         -- jq should be installed globally outside nvim
         json = { 'jq', 'prettier', stop_after_first = true },
         yaml = { 'prettier' },
