@@ -7,7 +7,7 @@ return {
       local lint = require 'lint'
 
       lint.linters_by_ft = {
-        markdown = { 'markdownlint' },
+        -- markdown = { 'mdformat' },
         python = { 'ruff' },
 
         -- json = { "jsonlint" },
@@ -22,7 +22,7 @@ return {
         terraform = nil,
       }
 
-      lint.linters_by_ft['*'] = { 'vale' }
+      -- lint.linters_by_ft['*'] = { 'vale' }
 
       -- To allow other plugins to add linters to require('lint').linters_by_ft,
       -- instead set linters_by_ft like this:

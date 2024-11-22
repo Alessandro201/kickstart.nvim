@@ -665,8 +665,7 @@ require('lazy').setup({
 
         -- python Linter, Linter LSP, Static Checker
         -- ruff should be installed globally, else uncomment the following lines
-        -- 'ruff',
-        -- 'ruff_lsp',
+        'ruff',
         -- If it gived problems during the installation run "sudo apt-get install python3.12-venv"
         'basedpyright',
 
@@ -674,33 +673,28 @@ require('lazy').setup({
         -- 'biome',
 
         -- CSS LSP and formatter
-        'cssls',
+        -- 'cssls',
         'prettierd',
+        'prettier',
 
         -- C and C++ lsp, formatter and debugger
         'clang-format',
         'clangd',
         'codelldb',
 
-        -- Go LSP, linter and formatter
-        'gopls',
-
-        -- SQL LSP and formatter
-        -- 'sqlfluff',
-        -- 'sqlfmt',
-        'sqls',
-        'sql-formatter',
-
         -- Text and markdown
-        'vale',
-        'vale_ls',
-        'markdownlint',
+        -- 'markdownlint',
+        'mdformat',
 
         -- toml
         'taplo',
 
         -- Zig LSP
         'zls',
+
+        -- bash
+        'bashls',
+        'beautysh',
       })
       require('mason-tool-installer').setup { ensure_installed = ensure_installed }
 
@@ -746,7 +740,6 @@ require('lazy').setup({
         }
       end,
       formatters_by_ft = {
-        lua = { 'stylua' },
         -- Conform can also run multiple formatters sequentially
         -- python = { "isort", "black" },
         --
@@ -755,9 +748,9 @@ require('lazy').setup({
         -- javascript = { { "prettierd", "prettier" } },
 
         -- jq should be installed globally outside nvim
-        json = { { 'jq', 'prettierd' } },
+        json = { 'jq', 'prettierd', stop_after_first = true },
         yaml = { 'prettierd' },
-        markdown = { 'prettierd' },
+        markdown = { 'prettierd', 'mdformat', stop_after_first = true },
         css = { 'prettierd' },
         xml = { 'xmlformatter' },
         toml = { 'taplo' },
@@ -767,6 +760,7 @@ require('lazy').setup({
         lua = { 'stylua' },
         c = { 'clang-format' },
         c_hash = { 'clang-format' },
+        bash = { 'beautysh' },
         cpp = { 'clang-format' },
         java = { 'clang-format' },
         javascript = { 'prettierd' },
@@ -869,8 +863,8 @@ require('lazy').setup({
           -- If you prefer more traditional completion keymaps,
           -- you can uncomment the following lines
           ['<CR>'] = cmp.mapping.confirm { select = true },
-          --['<Tab>'] = cmp.mapping.select_next_item(),
-          --['<S-Tab>'] = cmp.mapping.select_prev_item(),
+          ['<Tab>'] = cmp.mapping.select_next_item(),
+          ['<S-Tab>'] = cmp.mapping.select_prev_item(),
 
           -- Manually trigger a completion from nvim-cmp.
           --  Generally you don't need this, because nvim-cmp will display
@@ -975,7 +969,24 @@ require('lazy').setup({
     'nvim-treesitter/nvim-treesitter',
     build = ':TSUpdate',
     opts = {
-      ensure_installed = { 'bash', 'c', 'diff', 'html', 'lua', 'luadoc', 'markdown', 'markdown_inline', 'query', 'vim', 'vimdoc', 'python', 'rust', 'css', 'json', 'csv' },
+      ensure_installed = {
+        'bash',
+        'c',
+        'diff',
+        'html',
+        'lua',
+        'luadoc',
+        'markdown',
+        'markdown_inline',
+        'query',
+        'vim',
+        'vimdoc',
+        'python',
+        'rust',
+        'css',
+        'json',
+        'csv',
+      },
       -- Autoinstall languages that are not installed
       auto_install = true,
       highlight = {
