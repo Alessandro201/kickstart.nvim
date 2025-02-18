@@ -1002,13 +1002,18 @@ require('lazy').setup({
         'c',
         'cpp',
         'rust',
-        'zig',
+
+        -- Programming languages
+        'python',
+        'groovy',
+        'r',
+        'perl',
 
         -- Shells
         'bash',
         'fish',
 
-        -- Nvim files
+        -- For nvim
         'lua',
         'luadoc',
         'vim',
@@ -1018,13 +1023,8 @@ require('lazy').setup({
         'markdown',
         'markdown_inline',
 
-        -- Programming languages
-        'python',
-        'groovy',
-
         -- WEB stuff
         'javascript',
-        'typescript',
         'css',
         'html',
 
@@ -1033,6 +1033,16 @@ require('lazy').setup({
         'toml',
         'yaml',
         'csv',
+        'xml',
+        'tsv',
+
+        -- config files
+        'sql',
+        'gitignore',
+        'gitcommit',
+        'git_config',
+        'git_rebase',
+        'dockerfile',
 
         -- Other
         'diff',
