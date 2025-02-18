@@ -998,22 +998,44 @@ require('lazy').setup({
     build = ':TSUpdate',
     opts = {
       ensure_installed = {
-        'bash',
+        -- Compiled programming languages
         'c',
-        'diff',
-        'html',
+        'cpp',
+        'rust',
+        'zig',
+
+        -- Shells
+        'bash',
+        'fish',
+
+        -- Nvim files
         'lua',
         'luadoc',
-        'markdown',
-        'markdown_inline',
-        'query',
         'vim',
         'vimdoc',
+
+        -- Text files
+        'markdown',
+        'markdown_inline',
+
+        -- Programming languages
         'python',
-        'rust',
+        'groovy',
+
+        -- WEB stuff
+        'javascript',
+        'typescript',
         'css',
+        'html',
+
+        -- Structured data files
         'json',
+        'toml',
+        'yaml',
         'csv',
+
+        -- Other
+        'diff',
       },
       -- Autoinstall languages that are not installed
       auto_install = true,
