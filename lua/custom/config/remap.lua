@@ -50,6 +50,10 @@ vim.keymap.set('v', '<C-r>', '"hy:%s/<C-r>h//gc<left><left><left>')
 vim.keymap.set('n', '<leader>rw', [[:%s/\<<C-r><C-w>\>/<C-r><C-w>/gcI<Left><Left><Left>]], { desc = 'Replace word under cursor' })
 vim.keymap.set('v', '<leader>rw', [[:%s/\<<C-r><C-w>\>/<C-r><C-w>/gcI<Left><Left><Left>]], { desc = 'Replace word under cursor' })
 
+-- Remap write to also include :W
+vim.api.nvim_create_user_command('W', 'w', {})
+
+
 -- Make file executable
 -- vim.keymap.set('n', '<leader>x', '<cmd>!chmod +x %<CR>', { silent = true })
 

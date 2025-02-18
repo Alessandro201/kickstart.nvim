@@ -669,15 +669,15 @@ require('lazy').setup({
         -- python Linter, Linter LSP, Static Checker
         -- ruff should be installed globally, else uncomment the following lines
         'ruff',
-        -- If it gived problems during the installation run "sudo apt-get install python3.12-venv"
+        -- If it gave problems during the installation run "sudo apt-get install python3.12-venv"
         'basedpyright',
+        'isort',
 
         -- JSON, Javascript and Typescript LSP, Linter and formatter
         -- 'biome',
 
         -- CSS LSP and formatter
         -- 'cssls',
-        'prettierd',
         'prettier',
 
         -- C and C++ lsp, formatter and debugger
@@ -686,7 +686,7 @@ require('lazy').setup({
         'codelldb',
 
         -- Text and markdown
-        -- 'markdownlint',
+        'markdownlint',
         'mdformat',
 
         -- toml
@@ -698,6 +698,9 @@ require('lazy').setup({
         -- bash
         'bashls',
         'beautysh',
+
+        -- Groovy
+        'groovyls',
       })
       require('mason-tool-installer').setup { ensure_installed = ensure_installed }
 
@@ -712,6 +715,32 @@ require('lazy').setup({
             require('lspconfig')[server_name].setup(server)
           end,
         },
+      }
+
+      -- Hot patch nvim-lspconfig to add Nextflow language server
+      require('lspconfig.configs').nextflow_ls = {
+        default_config = {
+          cmd = { 'java', '-jar', vim.fn.expand '$HOME/Programs/nextflow-language-server-all.jar' },
+          extensions = { 'nf' },
+          root_dir = function(fname)
+            local util = require 'lspconfig.util'
+            return util.root_pattern 'nextflow.config'(fname) or vim.fs.dirname(vim.fs.find('.git', { path = fname, upward = true })[1])
+          end,
+          settings = {
+            nextflow = {
+              files = {
+                exclude = { '.git', '.nf-test', 'work' },
+              },
+            },
+          },
+        },
+      }
+
+      -- Set up the Nextflow language server like any other language server
+      -- (once the language server is added upstream, this will be the only code necessary)
+      require('lspconfig').nextflow_ls.setup {
+        capabilities = vim.lsp.protocol.make_client_capabilities(),
+        -- on_attach = function(client, bufnr) end, -- set up on attach function
       }
     end,
   },
@@ -746,19 +775,15 @@ require('lazy').setup({
       formatters_by_ft = {
         -- Conform can also run multiple formatters sequentially
         -- python = { "isort", "black" },
-        --
-        -- You can use a sub-list to tell conform to run *until* a formatter
-        -- is found.
-        -- javascript = { { "prettierd", "prettier" } },
 
         -- jq should be installed globally outside nvim
-        json = { 'jq', 'prettierd', stop_after_first = true },
-        yaml = { 'prettierd' },
-        markdown = { 'prettierd', 'mdformat', stop_after_first = true },
-        css = { 'prettierd' },
+        json = { 'jq', 'prettier', stop_after_first = true },
+        yaml = { 'prettier' },
+        markdown = { 'prettier', 'mdformat', stop_after_first = true },
+        css = { 'prettier' },
         xml = { 'xmlformatter' },
         toml = { 'taplo' },
-        html = { 'prettierd' },
+        html = { 'prettier' },
         sql = { 'sqlfmt' },
 
         lua = { 'stylua' },
@@ -767,10 +792,9 @@ require('lazy').setup({
         bash = { 'beautysh' },
         cpp = { 'clang-format' },
         java = { 'clang-format' },
-        javascript = { 'prettierd' },
-        typescript = { 'prettierd' },
-        go = { 'goimports', 'gofmt' },
-        python = { 'ruff_orgnize_import', 'ruff_format' },
+        javascript = { 'prettier' },
+        typescript = { 'prettier' },
+        python = { 'ruff_format', 'isort' },
       },
 
       formatters = {
@@ -1063,7 +1087,8 @@ require('lazy').setup({
   },
 })
 
-require 'custom.remap'
+require 'custom.config.remap'
+require 'custom.config.autocmds'
 
 -- The line beneath this is called `modeline`. See `:help modeline`
 -- vim: ts=2 sts=2 sw=2 et
