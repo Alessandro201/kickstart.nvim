@@ -648,6 +648,10 @@ require('lazy').setup({
             },
           },
         },
+
+        groovyls = {
+          filetypes = { 'groovy', 'nf' },
+        },
       }
 
       -- Ensure the servers and tools above are installed
