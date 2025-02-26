@@ -814,9 +814,11 @@ require('lazy').setup({
         -- Groovy
         'groovyls',
       })
-      require('mason-tool-installer').setup { ensure_installed = ensure_installed }
 
+      require('mason-tool-installer').setup { ensure_installed = ensure_installed }
       require('mason-lspconfig').setup {
+        ensure_installed = {}, -- explicitly set to an empty table (Kickstart populates installs via mason-tool-installer)
+        automatic_installation = false,
         handlers = {
           function(server_name)
             local server = servers[server_name] or {}
@@ -833,7 +835,7 @@ require('lazy').setup({
       require('lspconfig.configs').nextflow_ls = {
         default_config = {
           cmd = { 'java', '-jar', vim.fn.expand '$HOME/Programs/nextflow-language-server-all.jar' },
-          extensions = { 'nf' },
+          filetypes = { 'groovy' },
           root_dir = function(fname)
             local util = require 'lspconfig.util'
             return util.root_pattern 'nextflow.config'(fname) or vim.fs.dirname(vim.fs.find('.git', { path = fname, upward = true })[1])
@@ -901,6 +903,7 @@ require('lazy').setup({
         toml = { 'taplo' },
         html = { 'prettier' },
         sql = { 'sqlfmt' },
+        rust = { 'rust_fmt' },
 
         lua = { 'stylua' },
         c = { 'clang-format' },
