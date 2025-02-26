@@ -573,17 +573,17 @@ require('lazy').setup({
           --  For example, in C this would take you to the header.
           map('gD', vim.lsp.buf.declaration, '[G]oto [D]eclaration')
 
+          -- Jump to the type of the word under your cursor.
+          --  Useful when you're not sure what type a variable is and you want to see
+          --  the definition of its *type*, not where it was *defined*.
+          map('<leader>gD', require('telescope.builtin').lsp_type_definitions, '[G]oto Type [D]efinition')
+
           -- Find references for the word under your cursor.
           map('gr', require('telescope.builtin').lsp_references, '[G]oto [R]eferences')
 
           -- Jump to the implementation of the word under your cursor.
           --  Useful when your language has ways of declaring types without an actual implementation.
           map('gI', require('telescope.builtin').lsp_implementations, '[G]oto [I]mplementation')
-
-          -- Jump to the type of the word under your cursor.
-          --  Useful when you're not sure what type a variable is and you want to see
-          --  the definition of its *type*, not where it was *defined*.
-          map('<leader>D', require('telescope.builtin').lsp_type_definitions, 'Type [D]efinition')
 
           -- Fuzzy find all the symbols in your current document.
           --  Symbols are things like variables, functions, types, etc.
@@ -1184,6 +1184,22 @@ require('lazy').setup({
     --    - Incremental selection: Included, see `:help nvim-treesitter-incremental-selection-mod`
     --    - Show your current context: https://github.com/nvim-treesitter/nvim-treesitter-context
     --    - Treesitter + textobjects: https://github.com/nvim-treesitter/nvim-treesitter-textobjects
+  },
+
+  { -- Adds git related signs to the gutter, as well as utilities for managing changes
+    'sindrets/diffview.nvim',
+    lazy = false,
+    dependencies = {
+      'nvim-lua/plenary.nvim',
+      'lewis6991/gitsigns.nvim',
+    },
+    config = true,
+    keys = {
+      { '<leader>vo', '<Cmd>DiffviewOpen<CR>', mode = { 'n', 'v' }, desc = 'Show repo [D]iff against index' },
+      { '<leader>vh', '<Cmd>DiffvieFileHistory<CR>', mode = { 'n' }, { desc = 'Show repo [D]iff history' } },
+      { '<leader>vh', "<Esc><Cmd>'<,'>DiffviewFileHistory --follow<CR>", mode = { 'v' }, { desc = 'Show [D]iff history for current selection' } },
+    },
+    opts = {},
   },
 
   -- The following comments only work if you have downloaded the kickstart repo, not just copy pasted the

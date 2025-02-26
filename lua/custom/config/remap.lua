@@ -26,7 +26,6 @@ vim.keymap.set('n', '<leader>Y', '"+Y')
 -- Delete to void, without losing buffer
 vim.keymap.set('n', '<leader>d', '"_d')
 vim.keymap.set('v', '<leader>d', '"_d')
-vim.keymap.set('v', '<leader>p', '"_d')
 
 -- Delete character to void, without losing buffer
 vim.keymap.set('n', 'x', '"_x')
