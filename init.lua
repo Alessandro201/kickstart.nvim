@@ -819,7 +819,7 @@ require('lazy').setup({
         -- ruff should be installed globally, else uncomment the following lines
         'ruff',
         -- If it gave problems during the installation run "sudo apt-get install python3.12-venv"
-        'basedpyright',
+        'pylyzer',
         'isort',
 
         -- JSON, Javascript and Typescript LSP, Linter and formatter

@@ -17,6 +17,9 @@ vim.keymap.set('n', 'N', 'Nzzzv')
 
 -- greatest remap ever, paste from buffer without losing it
 vim.keymap.set('x', '<leader>p', 'P')
+-- Paste from " buffer before the block selection. Useful when you want to paste something before the block selection
+-- spanning multiple lines selected with C-v
+vim.keymap.set('v', '<C-p>', 'I<C-r>"<Esc>', { desc = 'Paste from YANK (") buffer before the block selection' })
 
 -- next greates remap ever, copy to system clipboard
 vim.keymap.set('n', '<leader>y', '"+y')
@@ -51,7 +54,6 @@ vim.keymap.set('v', '<leader>rw', [[:%s/\<<C-r><C-w>\>/<C-r><C-w>/gcI<Left><Left
 
 -- Remap write to also include :W
 vim.api.nvim_create_user_command('W', 'w', {})
-
 
 -- Make file executable
 -- vim.keymap.set('n', '<leader>x', '<cmd>!chmod +x %<CR>', { silent = true })
