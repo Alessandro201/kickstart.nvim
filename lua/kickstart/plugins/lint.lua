@@ -1,13 +1,27 @@
 return {
-
   { -- Linting
     'mfussenegger/nvim-lint',
     event = { 'BufReadPre', 'BufNewFile' },
     config = function()
       local lint = require 'lint'
+
       lint.linters_by_ft = {
-        markdown = { 'markdownlint' },
+        -- markdown = { 'mdformat' },
+        python = { 'ruff' },
+
+        -- json = { "jsonlint" },
+        json = nil,
+
+        clojure = nil,
+        dockerfile = nil,
+        inko = nil,
+        janet = nil,
+        rst = nil,
+        ruby = nil,
+        terraform = nil,
       }
+
+      -- lint.linters_by_ft['*'] = { 'vale' }
 
       -- To allow other plugins to add linters to require('lint').linters_by_ft,
       -- instead set linters_by_ft like this:
@@ -40,7 +54,7 @@ return {
       -- lint.linters_by_ft['ruby'] = nil
       -- lint.linters_by_ft['terraform'] = nil
       -- lint.linters_by_ft['text'] = nil
-
+      --
       -- Create autocommand which carries out the actual linting
       -- on the specified events.
       local lint_augroup = vim.api.nvim_create_augroup('lint', { clear = true })
