@@ -1212,7 +1212,7 @@ require('lazy').setup({
   },
 })
 
-require 'custom.config.remap'
+require 'custom.config.remaps'
 require 'custom.config.autocmds'
 
 -- The line beneath this is called `modeline`. See `:help modeline`
