@@ -104,6 +104,7 @@ vim.o.number = true
 --  Experiment for yourself to see if you like it!
 vim.o.relativenumber = true
 
+
 -- Enable mouse mode, can be useful for resizing splits for example!
 vim.o.mouse = 'a'
 
@@ -283,6 +284,8 @@ require('lazy').setup({
   --
   -- Use `opts = {}` to automatically pass options to a plugin's `setup()` function, forcing the plugin to be loaded.
   --
+  --  This is equivalent to:
+  --    require('Comment').setup({})
 
   -- Alternatively, use `config = function() ... end` for full control over the configuration.
   -- If you prefer to call `setup` explicitly, use:
@@ -481,6 +484,10 @@ require('lazy').setup({
         builtin.grep_string { only_sort_text = true, word_match = '-w', search = '', prompt_title = 'Fuzzy Search in all Files', path_display = { 'smart' } }
       end, { desc = 'Fuzzy [S]earch [/] in all Files' })
 
+      vim.keymap.set('n', '<leader>s/', function()
+        builtin.grep_string { only_sort_text = true, word_match = '-w', search = '', prompt_title = 'Fuzzy Search in all Files', path_display = { 'smart' } }
+      end, { desc = 'Fuzzy [S]earch [/] in all Files' })
+
       -- Slightly advanced example of overriding default behavior and theme
       -- vim.keymap.set('n', '<leader>/', function()
       --   -- You can pass additional configuration to Telescope to change the theme, layout, etc.
@@ -503,6 +510,13 @@ require('lazy').setup({
       vim.keymap.set('n', '<leader>sn', function()
         builtin.find_files { cwd = vim.fn.stdpath 'config' }
       end, { desc = '[S]earch [N]eovim files' })
+
+      -- CURRENTLY NOT WORKING
+      -- With <C-q> you can appen a list you have just opened (for example with <leader>sw) to
+      -- the quickfix list and with the following commands you can go to the next and previous item of the list.
+      -- The quick fix list will persist until you set another list
+      vim.keymap.set('n', '<C-j>', '<cmd>cnext<CR>', { desc = 'Go to the next item in the quickfix list' })
+      vim.keymap.set('n', '<C-k>', '<cmd>cprev<CR>', { desc = 'Go to the previous item in the quickfix list' })
     end,
   },
 
@@ -607,6 +621,14 @@ require('lazy').setup({
           --  Useful when you're not sure what type a variable is and you want to see
           --  the definition of its *type*, not where it was *defined*.
           map('<leader>gt', require('telescope.builtin').lsp_type_definitions, '[G]oto [T]ype Definition')
+
+          -- Jump to the type of the word under your cursor.
+          --  Useful when you're not sure what type a variable is and you want to see
+          --  the definition of its *type*, not where it was *defined*.
+          map('<leader>gD', require('telescope.builtin').lsp_type_definitions, '[G]oto Type [D]efinition')
+
+          -- Find references for the word under your cursor.
+          map('gr', require('telescope.builtin').lsp_references, '[G]oto [R]eferences')
 
           -- Fuzzy find all the symbols in your current document.
           --  Symbols are things like variables, functions, types, etc.
@@ -723,7 +745,23 @@ require('lazy').setup({
         -- clangd = {},
         -- gopls = {},
         -- pyright = {},
-        -- rust_analyzer = {},
+
+        rust_analyzer = {
+          -- DO NOT INSTALL rust-analyzer WITH MASON AS IT CAUSE CONFLICTS WITH THE SYSTEM INSTALLATION PREVENTING THE USE OF CLIPPY
+          -- The cmd on the next line specify that it needs to use the rust-analyzer on $PATH
+          cmd = {
+            'rust-analyzer',
+          },
+
+          settings = {
+            ['rust-analyzer'] = {
+              check = {
+                command = 'clippy',
+                features = 'all',
+              },
+            },
+          },
+        },
         -- ... etc. See `:help lspconfig-all` for a list of all the pre-configured LSPs
         --
         -- Some languages (like typescript) have entire language plugins that can be useful:
@@ -763,6 +801,10 @@ require('lazy').setup({
               diagnostics = { disable = { 'missing-fields' } },
             },
           },
+        },
+
+        groovyls = {
+          filetypes = { 'groovy', 'nf' },
         },
       }
 
@@ -817,10 +859,9 @@ require('lazy').setup({
         -- bash
         'bashls',
         'beautysh',
-
       })
-      require('mason-tool-installer').setup { ensure_installed = ensure_installed }
 
+      require('mason-tool-installer').setup { ensure_installed = ensure_installed }
       require('mason-lspconfig').setup {
         ensure_installed = {}, -- explicitly set to an empty table (Kickstart populates installs via mason-tool-installer)
         automatic_installation = false,
@@ -834,6 +875,32 @@ require('lazy').setup({
             require('lspconfig')[server_name].setup(server)
           end,
         },
+      }
+
+      -- Hot patch nvim-lspconfig to add Nextflow language server
+      require('lspconfig.configs').nextflow_ls = {
+        default_config = {
+          cmd = { 'java', '-jar', vim.fn.expand '$HOME/Programs/nextflow-language-server-all.jar' },
+          filetypes = { 'groovy' },
+          root_dir = function(fname)
+            local util = require 'lspconfig.util'
+            return util.root_pattern 'nextflow.config'(fname) or vim.fs.dirname(vim.fs.find('.git', { path = fname, upward = true })[1])
+          end,
+          settings = {
+            nextflow = {
+              files = {
+                exclude = { '.git', '.nf-test', 'work' },
+              },
+            },
+          },
+        },
+      }
+
+      -- Set up the Nextflow language server like any other language server
+      -- (once the language server is added upstream, this will be the only code necessary)
+      require('lspconfig').nextflow_ls.setup {
+        capabilities = vim.lsp.protocol.make_client_capabilities(),
+        -- on_attach = function(client, bufnr) end, -- set up on attach function
       }
     end,
   },
@@ -985,7 +1052,6 @@ require('lazy').setup({
         -- Adjusts spacing to ensure icons are aligned
         nerd_font_variant = 'mono',
       },
-
       completion = {
         -- By default, you may press `<c-space>` to show the documentation.
         -- Optionally, set `auto_show = true` to show the documentation after a delay.
@@ -1004,7 +1070,6 @@ require('lazy').setup({
           selection = { preselect = true, auto_insert = false }
         }
       },
-
       sources = {
         default = { 'path', 'lsp', 'snippets', 'lazydev' },
         providers = {
@@ -1177,6 +1242,7 @@ require('lazy').setup({
     --    - Show your current context: https://github.com/nvim-treesitter/nvim-treesitter-context
     --    - Treesitter + textobjects: https://github.com/nvim-treesitter/nvim-treesitter-textobjects
   },
+
 
   -- The following comments only work if you have downloaded the kickstart repo, not just copy pasted the
   -- init.lua. If you want these files, they are in the repository, so you can just download them and
