@@ -155,11 +155,11 @@ vim.opt.listchars = { tab = '» ', trail = '·', nbsp = '␣' }
 -- Preview substitutions live, as you type!
 vim.o.inccommand = 'split'
 
--- Show which line your cursor is on
-vim.o.cursorline = true
-
 -- Show line length column
 vim.o.colorcolumn = '120'
+
+-- Show which line your cursor is on
+vim.o.cursorline = true
 
 -- Minimal number of screen lines to keep above and below the cursor.
 vim.o.scrolloff = 10
@@ -854,12 +854,12 @@ require('lazy').setup({
         function()
           require('conform').format { async = true, lsp_format = 'fallback' }
         end,
-        mode = '',
-        desc = '[F]ormat buffer',
+        mode = { 'n', 'v' },
+        desc = '[F]ormat buffer or range (in visual mode)',
       },
     },
     opts = {
-      notify_on_error = false,
+      notify_on_error = true,
       -- format_on_save = function(bufnr)
       --   -- Disable "format_on_save lsp_fallback" for languages that don't
       --   -- have a well standardized coding style. You can add additional
@@ -1218,8 +1218,8 @@ require('lazy').setup({
   },
 })
 
-require 'custom.config.remaps'
-require 'custom.config.autocmds'
+require 'custom.configs.remaps'
+require 'custom.configs.autocmds'
 
 -- The line beneath this is called `modeline`. See `:help modeline`
 -- vim: ts=2 sts=2 sw=2 et
