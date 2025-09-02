@@ -164,6 +164,9 @@ vim.o.cursorline = true
 -- Minimal number of screen lines to keep above and below the cursor.
 vim.o.scrolloff = 10
 
+-- Minimal number of screen lines to keep above and below the cursor.
+vim.o.sidescrolloff = 40
+
 -- if performing an operation that would fail due to unsaved changes in the buffer (like `:q`),
 -- instead raise a dialog asking if you wish to save the current file(s)
 -- See `:help 'confirm'`
@@ -373,9 +376,9 @@ require('lazy').setup({
         { '<leader>c', group = '[C]ode', mode = { 'n', 'x' } },
         { '<leader>d', group = '[D]ocument' },
         { '<leader>r', group = '[R]ename' },
-        -- { '<leader>s', group = '[S]earch' },
-        -- { '<leader>t', group = '[T]oggle' },
-        -- { '<leader>h', group = 'Git [H]unk', mode = { 'n', 'v' } },
+        { '<leader>s', group = '[S]earch' },
+        { '<leader>t', group = '[T]oggle' },
+        { '<leader>h', group = 'Git [H]unk', mode = { 'n', 'v' } },
         {
           '<leader>?',
           function()
@@ -447,6 +450,21 @@ require('lazy').setup({
           mappings = {
             i = { ['<c-enter>'] = 'to_fuzzy_refine' },
           },
+          buffer_previewer_maker = function(filepath, bufnr, opts)
+            opts = opts or {}
+
+            filepath = vim.fn.expand(filepath)
+            vim.loop.fs_stat(filepath, function(_, stat)
+              if not stat then
+                return
+              end
+              if stat.size > 100000 then
+                return
+              else
+                require('telescope.previewers').buffer_previewer_maker(filepath, bufnr, opts)
+              end
+            end)
+          end,
         },
         -- pickers = {}
         extensions = {
@@ -583,34 +601,23 @@ require('lazy').setup({
             vim.keymap.set(mode, keys, func, { buffer = event.buf, desc = 'LSP: ' .. desc })
           end
 
-          -- Rename the variable under your cursor.
-          --  Most Language Servers support renaming across files, etc.
-          map('grn', vim.lsp.buf.rename, '[R]e[n]ame')
-
-          -- Execute a code action, usually your cursor needs to be on top of an error
-          -- or a suggestion from your LSP for this to activate.
-          map('gra', vim.lsp.buf.code_action, '[G]oto Code [A]ction', { 'n', 'x' })
-
-          -- Find references for the word under your cursor.
-          map('grr', require('telescope.builtin').lsp_references, '[G]oto [R]eferences')
-
           -- Jump to the implementation of the word under your cursor.
           --  Useful when your language has ways of declaring types without an actual implementation.
-          map('gri', require('telescope.builtin').lsp_implementations, '[G]oto [I]mplementation')
+          map('gi', require('telescope.builtin').lsp_implementations, '[G]oto [I]mplementation')
 
           -- Jump to the definition of the word under your cursor.
           --  This is where a variable was first declared, or where a function is defined, etc.
           --  To jump back, press <C-t>.
-          map('grd', require('telescope.builtin').lsp_definitions, '[G]oto [D]efinition')
+          map('gd', require('telescope.builtin').lsp_definitions, '[G]oto [D]efinition')
 
           -- WARN: This is not Goto Definition, this is Goto Declaration.
           --  For example, in C this would take you to the header.
-          map('grD', vim.lsp.buf.declaration, '[G]oto [D]eclaration')
+          map('gD', vim.lsp.buf.declaration, '[G]oto [D]eclaration')
 
           -- Jump to the type of the word under your cursor.
           --  Useful when you're not sure what type a variable is and you want to see
           --  the definition of its *type*, not where it was *defined*.
-          map('<leader>gD', require('telescope.builtin').lsp_type_definitions, '[G]oto Type [D]efinition')
+          map('gT', require('telescope.builtin').lsp_type_definitions, '[G]oto [T]ype Definition')
 
           -- Find references for the word under your cursor.
           map('gr', require('telescope.builtin').lsp_references, '[G]oto [R]eferences')
@@ -642,11 +649,6 @@ require('lazy').setup({
           -- Opens a popup that displays documentation about the word under your cursor
           --  See `:help K` for why this keymap.
           map('K', vim.lsp.buf.hover, 'Hover Documentation')
-          -- Jump to the type of the word under your cursor.
-
-          --  Useful when you're not sure what type a variable is and you want to see
-          --  the definition of its *type*, not where it was *defined*.
-          map('grt', require('telescope.builtin').lsp_type_definitions, '[G]oto [T]ype Definition')
 
           -- This function resolves a difference between neovim nightly (version 0.11) and stable (version 0.10)
           ---@param client vim.lsp.Client
@@ -754,18 +756,23 @@ require('lazy').setup({
         rust_analyzer = {
           -- DO NOT INSTALL rust-analyzer WITH MASON AS IT CAUSE CONFLICTS WITH THE SYSTEM INSTALLATION PREVENTING THE USE OF CLIPPY
           -- The cmd on the next line specify that it needs to use the rust-analyzer on $PATH
+          --
+          -- UPDATE: 2025/08/13
+          -- After fighting with this option because mason would install it anyway, bypassing the version I installed with
+          -- rustup, I decided to manually insert the path of the binary to make sure that it was configure correctly
+          -- by mason but would not use the version it installed itself
           cmd = {
-            'rust-analyzer',
+            vim.fn.expand '$HOME/.cargo/bin/rust-analyzer',
           },
 
-          settings = {
-            ['rust-analyzer'] = {
-              check = {
-                command = 'clippy',
-                features = 'all',
-              },
+          -- settings = {
+          ['rust-analyzer'] = {
+            check = {
+              command = 'clippy',
+              features = 'all',
             },
           },
+          -- },
         },
         -- ... etc. See `:help lspconfig-all` for a list of all the pre-configured LSPs
         --
@@ -790,10 +797,6 @@ require('lazy').setup({
             },
           },
         },
-
-        groovyls = {
-          filetypes = { 'groovy', 'nf' },
-        },
       }
 
       -- Ensure the servers and tools above are installed
@@ -809,6 +812,7 @@ require('lazy').setup({
       --
       -- You can add other tools here that you want Mason to install
       -- for you, so that they are available from within Neovim.
+
       local ensure_installed = vim.tbl_keys(servers or {})
       vim.list_extend(ensure_installed, {
         -- Lua
@@ -819,7 +823,9 @@ require('lazy').setup({
         -- ruff should be installed globally, else uncomment the following lines
         'ruff',
         -- If it gave problems during the installation run "sudo apt-get install python3.12-venv"
-        'pylyzer',
+        -- 'pylyzer',
+        -- 'jedi_language_server',
+        'ty',
         'isort',
 
         -- JSON, Javascript and Typescript LSP, Linter and formatter
@@ -847,9 +853,6 @@ require('lazy').setup({
         -- bash
         'bashls',
         'beautysh',
-
-        -- Groovy
-        'groovyls',
       })
 
       require('mason-tool-installer').setup { ensure_installed = ensure_installed }
@@ -866,32 +869,6 @@ require('lazy').setup({
             require('lspconfig')[server_name].setup(server)
           end,
         },
-      }
-
-      -- Hot patch nvim-lspconfig to add Nextflow language server
-      require('lspconfig.configs').nextflow_ls = {
-        default_config = {
-          cmd = { 'java', '-jar', vim.fn.expand '$HOME/Programs/nextflow-language-server-all.jar' },
-          filetypes = { 'groovy' },
-          root_dir = function(fname)
-            local util = require 'lspconfig.util'
-            return util.root_pattern 'nextflow.config'(fname) or vim.fs.dirname(vim.fs.find('.git', { path = fname, upward = true })[1])
-          end,
-          settings = {
-            nextflow = {
-              files = {
-                exclude = { '.git', '.nf-test', 'work' },
-              },
-            },
-          },
-        },
-      }
-
-      -- Set up the Nextflow language server like any other language server
-      -- (once the language server is added upstream, this will be the only code necessary)
-      require('lspconfig').nextflow_ls.setup {
-        capabilities = vim.lsp.protocol.make_client_capabilities(),
-        -- on_attach = function(client, bufnr) end, -- set up on attach function
       }
     end,
   },
@@ -940,7 +917,7 @@ require('lazy').setup({
         toml = { 'taplo' },
         html = { 'prettier' },
         sql = { 'sqlfmt' },
-        rust = { 'rust_fmt' },
+        rust = { 'rustfmt', lsp_format = 'fallback' },
 
         lua = { 'stylua' },
         c = { 'clang-format' },
@@ -1006,22 +983,13 @@ require('lazy').setup({
         },
         opts = {},
       },
--- <<<<<<< HEAD
---       'saadparwaiz1/cmp_luasnip',
---
---       -- Adds other completion capabilities.
---       --  nvim-cmp does not ship with all sources by default. They are split
---       --  into multiple repos for maintenance purposes.
---       'hrsh7th/cmp-nvim-lsp',
---       'hrsh7th/cmp-path',
---       'hrsh7th/cmp-path',
---       'hrsh7th/cmp-nvim-lsp-signature-help',
--- =======
       'folke/lazydev.nvim',
--- >>>>>>> upstream/master
     },
     --- @module 'blink.cmp'
     --- @type blink.cmp.Config
+
+    lazy = true,
+    build = 'cargo build --release', -- for delimiters
     opts = {
       keymap = {
         -- 'default' (recommended) for mappings similar to built-in completions
@@ -1045,7 +1013,7 @@ require('lazy').setup({
         -- <c-k>: Toggle signature help
         --
         -- See :h blink-cmp-config-keymap for defining your own keymap
-        preset = 'default',
+        -- preset = 'enter',
 
         -- For more advanced Luasnip keymaps (e.g. selecting choice nodes, expansion) see:
         --    https://github.com/L3MON4D3/LuaSnip?tab=readme-ov-file#keymaps
@@ -1057,40 +1025,17 @@ require('lazy').setup({
         nerd_font_variant = 'mono',
       },
 
--- <<<<<<< HEAD
---           -- If you prefer more traditional completion keymaps,
---           -- you can uncomment the following lines
---           ['<CR>'] = cmp.mapping.confirm { select = true },
---           ['<Tab>'] = cmp.mapping.select_next_item(),
---           ['<S-Tab>'] = cmp.mapping.select_prev_item(),
--- =======
       completion = {
         -- By default, you may press `<c-space>` to show the documentation.
         -- Optionally, set `auto_show = true` to show the documentation after a delay.
-        documentation = { auto_show = false, auto_show_delay_ms = 500 },
+        documentation = { auto_show = true, auto_show_delay_ms = 500 },
       },
--- >>>>>>> upstream/master
 
       sources = {
-        default = { 'lsp', 'path', 'snippets', 'lazydev' },
+        default = { 'path', 'buffer', 'lsp', 'snippets', 'lazydev' },
         providers = {
           lazydev = { module = 'lazydev.integrations.blink', score_offset = 100 },
         },
--- <<<<<<< HEAD
---         sources = {
---           {
---             name = 'lazydev',
---             -- set group index to 0 to skip loading LuaLS completions as lazydev recommends it
---             group_index = 0,
---           },
---           { name = 'nvim_lsp' },
---           { name = 'luasnip' },
---           { name = 'path' },
---           { name = 'nvim_lsp_signature_help' },
---         },
---       }
---     end,
--- =======
       },
 
       snippets = { preset = 'luasnip' },
@@ -1102,12 +1047,11 @@ require('lazy').setup({
       -- the rust implementation via `'prefer_rust_with_warning'`
       --
       -- See :h blink-cmp-config-fuzzy for more information
-      fuzzy = { implementation = 'lua' },
+      fuzzy = { implementation = 'prefer_rust_with_warning' },
 
       -- Shows a signature help window while you type arguments for a function
       signature = { enabled = true },
     },
--- >>>>>>> upstream/master
   },
 
   { -- You can easily change to a different colorscheme.
@@ -1213,9 +1157,7 @@ require('lazy').setup({
         'json',
         'toml',
         'yaml',
-        'csv',
         'xml',
-        'tsv',
 
         -- config files
         'sql',
@@ -1229,7 +1171,9 @@ require('lazy').setup({
         'diff',
       },
       -- Autoinstall languages that are not installed
-      auto_install = true,
+      auto_install = false,
+      -- The Highlighter of neovim for CSV files works much better than treesitter
+      ignore_install = { 'csv', 'tsv' },
       highlight = {
         enable = true,
         -- Some languages depend on vim's regex highlighting system (such as Ruby) for indent rules.
@@ -1247,7 +1191,6 @@ require('lazy').setup({
     --    - Treesitter + textobjects: https://github.com/nvim-treesitter/nvim-treesitter-textobjects
   },
 
-
   -- The following comments only work if you have downloaded the kickstart repo, not just copy pasted the
   -- init.lua. If you want these files, they are in the repository, so you can just download them and
   -- place them in the correct locations.
@@ -1261,7 +1204,7 @@ require('lazy').setup({
   require 'kickstart.plugins.indent_line',
   require 'kickstart.plugins.lint',
   require 'kickstart.plugins.autopairs',
-  require 'kickstart.plugins.neo-tree',
+  -- require 'kickstart.plugins.neo-tree',
   require 'kickstart.plugins.gitsigns', -- adds gitsigns recommend keymaps
 
   -- NOTE: The import below can automatically add your own plugins, configuration, etc from `lua/custom/plugins/*.lua`

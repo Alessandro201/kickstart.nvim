@@ -10,13 +10,6 @@ return {
     end,
   },
 
-  {
-    'm4xshen/hardtime.nvim',
-    lazy = false,
-    dependencies = { 'MunifTanjim/nui.nvim' },
-    opts = {},
-  },
-
   { -- Adds git related signs to the gutter, as well as utilities for managing changes
     'sindrets/diffview.nvim',
     lazy = false,
@@ -31,5 +24,29 @@ return {
       { '<leader>vh', "<Esc><Cmd>'<,'>DiffviewFileHistory --follow<CR>", mode = { 'v' }, { desc = 'Show [D]iff history for current selection' } },
     },
     opts = {},
+  },
+  {
+    'johnsaigle/cargo-expand.nvim',
+    config = function()
+      require('cargo-expand').setup()
+    end,
+  },
+  {
+    'chipsenkbeil/distant.nvim',
+    branch = 'v0.3',
+    config = function()
+      require('distant'):setup()
+    end,
+  },
+  {
+    'nosduco/remote-sshfs.nvim',
+    dependencies = { 'nvim-telescope/telescope.nvim', 'nvim-lua/plenary.nvim' },
+    opts = {
+      -- Refer to the configuration section below
+      -- or leave empty for defaults
+    },
+    config = function()
+      require('telescope').load_extension 'remote-sshfs'
+    end,
   },
 }

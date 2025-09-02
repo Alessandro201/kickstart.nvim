@@ -46,7 +46,7 @@ vim.keymap.set('n', '<leader>k', '<cmd>lnext<CR>zz')
 vim.keymap.set('n', '<leader>j', '<cmd>lprev<CR>zz')
 
 -- Replace selected text. Ask confirmation (y\n) for each step or confirm all (a)
-vim.keymap.set('v', '<C-r>', '"hy:%s/<C-r>h//gc<left><left><left>')
+vim.keymap.set('v', '<C-r>', '"hy:%s/<C-r>h/<C-r>h/gc<left><left><left>', { desc = 'Replace selection' })
 
 -- Replace current WHOLE word. Ask confirmation (y\n) for each step or confirm all (a)
 vim.keymap.set('n', '<leader>rw', [[:%s/\<<C-r><C-w>\>/<C-r><C-w>/gcI<Left><Left><Left>]], { desc = 'Replace word under cursor' })
