@@ -99,7 +99,7 @@ do
   vim.g.maplocalleader = ' '
 
   -- Set to true if you have a Nerd Font installed and selected in the terminal
-  vim.g.have_nerd_font = false
+  vim.g.have_nerd_font = true
 
   -- [[ Setting options ]]
   --  See `:help vim.o`
@@ -110,7 +110,7 @@ do
   vim.o.number = true
   -- You can also add relative line numbers, to help with jumping.
   --  Experiment for yourself to see if you like it!
-  -- vim.o.relativenumber = true
+  vim.o.relativenumber = true
 
   -- Enable mouse mode, can be useful for resizing splits for example!
   vim.o.mouse = 'a'
@@ -122,7 +122,7 @@ do
   --  Schedule the setting after `UiEnter` because it can increase startup-time.
   --  Remove this option if you want your OS clipboard to remain independent.
   --  See `:help 'clipboard'`
-  vim.schedule(function() vim.o.clipboard = 'unnamedplus' end)
+  -- vim.schedule(function() vim.o.clipboard = 'unnamedplus' end)
 
   -- Enable break indent
   vim.o.breakindent = true
@@ -161,11 +161,36 @@ do
   -- Preview substitutions live, as you type!
   vim.o.inccommand = 'split'
 
+  -- Show line length column
+  vim.o.colorcolumn = '120'
+
   -- Show which line your cursor is on
   vim.o.cursorline = true
 
   -- Minimal number of screen lines to keep above and below the cursor.
   vim.o.scrolloff = 10
+
+  -- Minimal number of screen lines to keep right of the cursor.
+  vim.o.sidescrolloff = 40
+
+  vim.o.smarttab = true
+
+  -- enter spaces when tab is pressed
+  vim.o.expandtab = true
+
+  -- use 4 spaces to represent tab
+  vim.o.tabstop = 4
+  vim.o.softtabstop = 4
+
+  -- Copy indent from current line when starting a new line
+  vim.o.autoindent = true
+
+  -- number of spaces to use for auto indent
+  vim.o.shiftwidth = 4
+  vim.o.smartindent = true
+
+  -- Make backspaces more powerfull
+  vim.o.backspace = 'indent,eol,start'
 
   -- if performing an operation that would fail due to unsaved changes in the buffer (like `:q`),
   -- instead raise a dialog asking if you wish to save the current file(s)
@@ -184,6 +209,9 @@ do
   -- Clear highlights on search when pressing <Esc> in normal mode
   --  See `:help hlsearch`
   vim.keymap.set('n', '<Esc>', '<cmd>nohlsearch<CR>')
+
+  -- Exit from insert mode with `jj`
+  vim.keymap.set('i', 'jj', '<Esc>')
 
   -- Diagnostic Config & Keymaps
   --  See `:help vim.diagnostic.Opts`
@@ -209,6 +237,10 @@ do
     },
   }
 
+  -- Diagnostic keymaps
+  vim.keymap.set('n', '[d', vim.diagnostic.goto_prev, { desc = 'Go to previous [D]iagnostic message' })
+  vim.keymap.set('n', ']d', vim.diagnostic.goto_next, { desc = 'Go to next [D]iagnostic message' })
+  vim.keymap.set('n', '<leader>e', vim.diagnostic.open_float, { desc = 'Show diagnostic [E]rror messages' })
   vim.keymap.set('n', '<leader>q', vim.diagnostic.setloclist, { desc = 'Open diagnostic [Q]uickfix list' })
 
   -- Exit terminal mode in the builtin terminal with a shortcut that is a bit easier
@@ -369,10 +401,16 @@ do
     icons = { mappings = vim.g.have_nerd_font },
     -- Document existing key chains
     spec = {
+      { '<leader>r', group = '[R]ename', mode = { 'n', 'v' } },
       { '<leader>s', group = '[S]earch', mode = { 'n', 'v' } },
       { '<leader>t', group = '[T]oggle' },
       { '<leader>h', group = 'Git [H]unk', mode = { 'n', 'v' } }, -- Enable gitsigns recommended keymaps first
       { 'gr', group = 'LSP Actions', mode = { 'n' } },
+      {
+        '<leader>?',
+        function() require('which-key').show { global = true } end,
+        desc = 'Buffer Local Keymaps (which-key)',
+      },
     },
   }
 
@@ -494,11 +532,25 @@ do
     -- You can put your default mappings / updates / etc. in here
     --  All the info you're looking for is in `:help telescope.setup()`
     --
-    -- defaults = {
-    --   mappings = {
-    --     i = { ['<c-enter>'] = 'to_fuzzy_refine' },
-    --   },
-    -- },
+    defaults = {
+      mappings = {
+        i = { ['<c-enter>'] = 'to_fuzzy_refine' },
+      },
+      buffer_previewer_maker = function(filepath, bufnr, opts)
+        opts = opts or {}
+
+        filepath = vim.fn.expand(filepath)
+        vim.loop.fs_stat(filepath, function(_, stat)
+          if not stat then return end
+          if stat.size > 100000 then
+            return
+          else
+            require('telescope.previewers').buffer_previewer_maker(filepath, bufnr, opts)
+          end
+        end)
+      end,
+    },
+
     -- pickers = {}
     extensions = {
       ['ui-select'] = { require('telescope.themes').get_dropdown() },
@@ -523,6 +575,40 @@ do
   vim.keymap.set('n', '<leader>sc', builtin.commands, { desc = '[S]earch [C]ommands' })
   vim.keymap.set('n', '<leader><leader>', builtin.buffers, { desc = '[ ] Find existing buffers' })
 
+  vim.keymap.set('n', '<leader>/', builtin.current_buffer_fuzzy_find, { desc = '[/] Fuzzily search in current buffer' })
+  vim.keymap.set(
+    'n',
+    '<leader>s/',
+    function()
+      builtin.grep_string {
+        only_sort_text = true,
+        word_match = '-w',
+        search = '',
+        prompt_title = 'Fuzzy Search in all Files',
+        path_display = { 'smart' },
+      }
+    end,
+    { desc = 'Fuzzy [S]earch [/] in all Files' }
+  )
+
+  -- Override default behavior and theme when searching
+  -- vim.keymap.set('n', '<leader>/', function()
+  --   -- You can pass additional configuration to Telescope to change the theme, layout, etc.
+  --   builtin.current_buffer_fuzzy_find(require('telescope.themes').get_dropdown {
+  --     winblend = 10,
+  --     previewer = false,
+  --   })
+  -- end, { desc = '[/] Fuzzily search in current buffer' })
+
+  -- It's also possible to pass additional configuration options.
+  --  See `:help telescope.builtin.live_grep()` for information about particular keys
+  -- vim.keymap.set('n', '<leader>s/', function()
+  --   builtin.live_grep {
+  --     grep_open_files = true,
+  --     prompt_title = 'Live Grep in Open Files',
+  --   }
+  -- end, { desc = '[S]earch [/] in Open Files' })
+
   -- Add Telescope-based LSP pickers when an LSP attaches to a buffer.
   -- If you later switch picker plugins, this is where to update these mappings.
   vim.api.nvim_create_autocmd('LspAttach', {
@@ -531,54 +617,39 @@ do
       local buf = event.buf
 
       -- Find references for the word under your cursor.
-      vim.keymap.set('n', 'grr', builtin.lsp_references, { buffer = buf, desc = '[G]oto [R]eferences' })
+      vim.keymap.set('n', '<leader>gr', builtin.lsp_references, { buffer = buf, desc = '[G]oto [R]eferences' })
 
       -- Jump to the implementation of the word under your cursor.
       -- Useful when your language has ways of declaring types without an actual implementation.
-      vim.keymap.set('n', 'gri', builtin.lsp_implementations, { buffer = buf, desc = '[G]oto [I]mplementation' })
+      vim.keymap.set('n', '<leader>gi', builtin.lsp_implementations, { buffer = buf, desc = '[G]oto [I]mplementation' })
 
       -- Jump to the definition of the word under your cursor.
       -- This is where a variable was first declared, or where a function is defined, etc.
       -- To jump back, press <C-t>.
-      vim.keymap.set('n', 'grd', builtin.lsp_definitions, { buffer = buf, desc = '[G]oto [D]efinition' })
+      vim.keymap.set('n', '<leader>gd', builtin.lsp_definitions, { buffer = buf, desc = '[G]oto [D]efinition' })
 
       -- Fuzzy find all the symbols in your current document.
       -- Symbols are things like variables, functions, types, etc.
-      vim.keymap.set('n', 'gO', builtin.lsp_document_symbols, { buffer = buf, desc = 'Open Document Symbols' })
+      vim.keymap.set('n', '<leader>gO', builtin.lsp_document_symbols, { buffer = buf, desc = 'Open Document Symbols' })
 
       -- Fuzzy find all the symbols in your current workspace.
       -- Similar to document symbols, except searches over your entire project.
-      vim.keymap.set('n', 'gW', builtin.lsp_dynamic_workspace_symbols, { buffer = buf, desc = 'Open Workspace Symbols' })
+      vim.keymap.set('n', '<leader>gW', builtin.lsp_dynamic_workspace_symbols, { buffer = buf, desc = 'Open Workspace Symbols' })
 
       -- Jump to the type of the word under your cursor.
       -- Useful when you're not sure what type a variable is and you want to see
       -- the definition of its *type*, not where it was *defined*.
-      vim.keymap.set('n', 'grt', builtin.lsp_type_definitions, { buffer = buf, desc = '[G]oto [T]ype Definition' })
+      vim.keymap.set('n', '<leader>gT', builtin.lsp_type_definitions, { buffer = buf, desc = '[G]oto [T]ype Definition' })
+
+      -- Fuzzy find all the symbols in your current document.
+      --  Symbols are things like variables, functions, types, etc.
+      vim.keymap.set('n', '<leader>ds', builtin.lsp_document_symbols, { buffer = buf, desc = '[D]ocument [S]ymbols' })
+
+      -- Fuzzy find all the symbols in your current workspace.
+      --  Similar to document symbols, except searches over your entire project.
+      vim.keymap.set('n', '<leader>ws', builtin.lsp_dynamic_workspace_symbols, { buffer = buf, desc = '[W]orkspace [S]ymbols' })
     end,
   })
-
-  -- Override default behavior and theme when searching
-  vim.keymap.set('n', '<leader>/', function()
-    -- You can pass additional configuration to Telescope to change the theme, layout, etc.
-    builtin.current_buffer_fuzzy_find(require('telescope.themes').get_dropdown {
-      winblend = 10,
-      previewer = false,
-    })
-  end, { desc = '[/] Fuzzily search in current buffer' })
-
-  -- It's also possible to pass additional configuration options.
-  --  See `:help telescope.builtin.live_grep()` for information about particular keys
-  vim.keymap.set(
-    'n',
-    '<leader>s/',
-    function()
-      builtin.live_grep {
-        grep_open_files = true,
-        prompt_title = 'Live Grep in Open Files',
-      }
-    end,
-    { desc = '[S]earch [/] in Open Files' }
-  )
 
   -- Shortcut for searching your Neovim configuration files
   vim.keymap.set('n', '<leader>sn', function() builtin.find_files { cwd = vim.fn.stdpath 'config', follow = true } end, { desc = '[S]earch [N]eovim files' })
@@ -638,15 +709,18 @@ do
 
       -- Rename the variable under your cursor.
       --  Most Language Servers support renaming across files, etc.
-      map('grn', vim.lsp.buf.rename, '[R]e[n]ame')
+      map('<leader>rn', vim.lsp.buf.rename, '[R]e[n]ame')
 
       -- Execute a code action, usually your cursor needs to be on top of an error
       -- or a suggestion from your LSP for this to activate.
-      map('gra', vim.lsp.buf.code_action, '[G]oto Code [A]ction', { 'n', 'x' })
+      map('<leader>ca', vim.lsp.buf.code_action, '[C]ode [A]ction', { 'n', 'x' })
 
       -- WARN: This is not Goto Definition, this is Goto Declaration.
       --  For example, in C this would take you to the header.
-      map('grD', vim.lsp.buf.declaration, '[G]oto [D]eclaration')
+      map('<leader>gD', vim.lsp.buf.declaration, '[G]oto [D]eclaration')
+
+      -- Opens a popup that displays documentation about the word under your cursor
+      map('K', vim.lsp.buf.hover, 'Hover Documentation')
 
       -- The following two autocommands are used to highlight references of the
       -- word under your cursor when your cursor rests there for a little while.
@@ -695,15 +769,12 @@ do
     -- clangd = {},
     -- gopls = {},
     -- pyright = {},
-    -- rust_analyzer = {},
     --
     -- Some languages (like typescript) have entire language plugins that can be useful:
     --    https://github.com/pmizio/typescript-tools.nvim
     --
     -- But for many setups, the LSP (`ts_ls`) will work just fine
     -- ts_ls = {},
-
-    stylua = {}, -- Used to format Lua code
 
     -- Special Lua Config, as recommended by neovim help docs
     lua_ls = {
@@ -738,6 +809,52 @@ do
         },
       },
     },
+
+    rust_analyzer = {
+      -- DO NOT INSTALL rust-analyzer WITH MASON AS IT CAUSE CONFLICTS WITH THE SYSTEM INSTALLATION PREVENTING THE USE OF CLIPPY
+      -- The cmd on the next line specify that it needs to use the rust-analyzer on $PATH
+      --
+      -- UPDATE: 2025/08/13
+      -- After fighting with this option because mason would install it anyway, bypassing the version I installed with
+      -- rustup, I decided to manually insert the path of the binary to make sure that it was configure correctly
+      -- by mason but would not use the version it installed itself
+      cmd = {
+        vim.fn.expand '$HOME/.cargo/bin/rust-analyzer',
+      },
+
+      -- settings = {
+      ['rust-analyzer'] = {
+        check = {
+          command = 'clippy',
+          features = 'all',
+        },
+      },
+      -- },
+    },
+
+    -- Lua LSP and formatter
+    stylua = {},
+
+    -- Zig LSP
+    zls = {},
+
+    -- Python LSP and Linter
+    ty = {},
+
+    -- JSON, Javascript and Typescript LSP, Linter and formatter
+    -- biome,
+
+    -- CSS LSP and formatter
+    cssls = {},
+
+    -- C and C++ lsp, formatter and debugger
+    clangd = {},
+
+    -- TOML LSP, linter, and formatter
+    taplo = {},
+
+    -- Bash LSP
+    bashls = {},
   }
 
   vim.pack.add {
@@ -760,6 +877,32 @@ do
   local ensure_installed = vim.tbl_keys(servers or {})
   vim.list_extend(ensure_installed, {
     -- You can add other tools here that you want Mason to install
+    -- Formatters / linters / tools (not LSP servers)
+
+    -- python Linter, Formatter
+    -- If Mason fails to install Ruff, install globally
+    'ruff',
+    'isort',
+
+    -- R formatter
+    'air',
+
+    -- CSS, HTML, JSON, JavaScript, TypeScript, YAML  formatter
+    'prettierd',
+
+    -- C, C++ formatter and debugger
+    'clang-format',
+    'codelldb',
+
+    -- Markdown/Text formatter and lint
+    'markdownlint',
+    'mdformat',
+
+    -- BASH formatter
+    'beautysh',
+
+    -- SQL Linter and formatter
+    'sqruff',
   })
 
   require('mason-tool-installer').setup { ensure_installed = ensure_installed }
@@ -778,7 +921,7 @@ do
   -- [[ Formatting ]]
   vim.pack.add { gh 'stevearc/conform.nvim' }
   require('conform').setup {
-    notify_on_error = false,
+    notify_on_error = true,
     format_on_save = function(bufnr)
       -- You can specify filetypes to autoformat on save here:
       local enabled_filetypes = {
@@ -802,10 +945,50 @@ do
       --
       -- You can use 'stop_after_first' to run the first available formatter from the list
       -- javascript = { "prettierd", "prettier", stop_after_first = true },
+
+      -- jq should be installed globally outside nvim
+      json = { 'jq', 'prettierd', stop_after_first = true },
+      yaml = { 'prettierd' },
+      markdown = { 'prettierd', 'mdformat', stop_after_first = true },
+      css = { 'prettierd' },
+      toml = { 'taplo' },
+      html = { 'prettierd' },
+      sql = { 'sqlfmt' },
+      r = { 'air' },
+      rust = { 'rustfmt', lsp_format = 'fallback' },
+      lua = { 'stylua' },
+      c = { 'clang-format' },
+      c_hash = { 'clang-format' },
+      bash = { 'beautysh' },
+      cpp = { 'clang-format' },
+      java = { 'clang-format' },
+      javascript = { 'prettierd' },
+      typescript = { 'prettierd' },
+      python = { 'ruff_format', 'isort' },
+    },
+
+    formatters = {
+      ruff_fmt = {
+        prepend_args = {
+          '--line-length=150',
+          '--target-version=py312',
+        },
+      },
+      -- system_ruff = {
+      --   command = 'ruff',
+      --   args = { 'format', '--stdin-filename', '$FILENAME' },
+      --   range_args = function(self, ctx)
+      --     return { '--range=', ctx.range.start[1] .. '-' .. ctx.range['end'][1] }
+      --   end,
+      --   stdin = true,
+      --   condition = function(self, ctx)
+      --     return vim.fs.basename(ctx.filename):match '^.+%.py$'
+      --   end,
+      -- },
     },
   }
 
-  vim.keymap.set({ 'n', 'v' }, '<leader>f', function() require('conform').format { async = true } end, { desc = '[F]ormat buffer' })
+  vim.keymap.set({ 'n', 'v' }, '<leader>f', function() require('conform').format { async = true } end, { desc = '[F]ormat buffer or range of text' })
 end
 
 -- ============================================================
@@ -824,10 +1007,12 @@ do
   --    See the README about individual language/framework/plugin snippets:
   --    https://github.com/rafamadriz/friendly-snippets
   --
-  -- vim.pack.add { gh 'rafamadriz/friendly-snippets' }
-  -- require('luasnip.loaders.from_vscode').lazy_load()
+  vim.pack.add { gh 'rafamadriz/friendly-snippets' }
+  require('luasnip.loaders.from_vscode').lazy_load()
 
   -- [[ Autocomplete Engine ]]
+  -- In previous version this was inside blink.cmp
+  -- build = 'cargo build --release', -- for delimiters
   vim.pack.add { { src = gh 'saghen/blink.cmp', version = vim.version.range '1.*' } }
   require('blink.cmp').setup {
     keymap = {
@@ -867,11 +1052,26 @@ do
     completion = {
       -- By default, you may press `<c-space>` to show the documentation.
       -- Optionally, set `auto_show = true` to show the documentation after a delay.
-      documentation = { auto_show = false, auto_show_delay_ms = 500 },
+      documentation = { auto_show = true, auto_show_delay_ms = 100 },
     },
 
     sources = {
-      default = { 'lsp', 'path', 'snippets' },
+      default = { 'path', 'buffer', 'lsp', 'snippets' },
+      -- default = { 'path', 'buffer', 'lsp', 'snippets', 'lazydev' },
+      -- From previous config. May be better to install lazydev:
+      --
+      -- ```lua
+      -- vim.pack.add { gh 'folke/lazydev.nvim' }
+      -- require('lazydev').setup {
+      --   library = {
+      --     -- Load luvit types when the `vim.uv` word is found
+      --     { path = '${3rd}/luv/library', words = { 'vim%.uv' } },
+      --   },
+      -- }
+      -- ```
+      -- providers = {
+      --   lazydev = { module = 'lazydev.integrations.blink', score_offset = 100 },
+      -- },
     },
 
     snippets = { preset = 'luasnip' },
@@ -883,7 +1083,7 @@ do
     -- the rust implementation via `'prefer_rust_with_warning'`
     --
     -- See `:help blink-cmp-config-fuzzy` for more information
-    fuzzy = { implementation = 'lua' },
+    fuzzy = { implementation = 'prefer_rust_with_warning' },
 
     -- Shows a signature help window while you type arguments for a function
     signature = { enabled = true },
@@ -917,8 +1117,8 @@ do
 
     -- Enable treesitter based folds
     -- For more info on folds see `:help folds`
-    -- vim.wo.foldexpr = 'v:lua.vim.treesitter.foldexpr()'
-    -- vim.wo.foldmethod = 'expr'
+    vim.wo.foldexpr = 'v:lua.vim.treesitter.foldexpr()'
+    vim.wo.foldmethod = 'manual'
 
     -- Check if treesitter indentation is available for this language, and if so enable it
     -- in case there is no indent query, the indentexpr will fallback to the vim's built in one
@@ -932,6 +1132,9 @@ do
   vim.api.nvim_create_autocmd('FileType', {
     callback = function(args)
       local buf, filetype = args.buf, args.match
+
+      -- Skip treesitter for CSV and TSV files (use default highlighter instead)
+      if vim.tbl_contains({ 'csv', 'tsv' }, filetype) then return end
 
       local language = vim.treesitter.language.get_lang(filetype)
       if not language then return end
@@ -967,17 +1170,20 @@ do
   --  Uncomment any of the lines below to enable them (you will need to restart nvim).
   --
   -- require 'kickstart.plugins.debug'
-  -- require 'kickstart.plugins.indent_line'
-  -- require 'kickstart.plugins.lint'
-  -- require 'kickstart.plugins.autopairs'
+  require 'kickstart.plugins.indent_line'
+  require 'kickstart.plugins.lint'
+  require 'kickstart.plugins.autopairs'
   -- require 'kickstart.plugins.neo-tree'
-  -- require 'kickstart.plugins.gitsigns' -- adds gitsigns recommended keymaps
+  require 'kickstart.plugins.gitsigns' -- adds gitsigns recommended keymaps
 
   -- NOTE: You can add your own plugins, configuration, etc from `lua/custom/plugins/*.lua`
   --
   --  Uncomment the following line and add your plugins to `lua/custom/plugins/*.lua` to get going.
-  -- require 'custom.plugins'
+  require 'custom.plugins'
 end
+
+require 'custom.config.remap'
+require 'custom.config.autocmds'
 
 -- The line beneath this is called `modeline`. See `:help modeline`
 -- vim: ts=2 sts=2 sw=2 et
