@@ -828,6 +828,9 @@ require('lazy').setup({
         'ty',
         'isort',
 
+        -- R formatter
+        'air',
+
         -- JSON, Javascript and Typescript LSP, Linter and formatter
         -- 'biome',
 
@@ -917,6 +920,7 @@ require('lazy').setup({
         toml = { 'taplo' },
         html = { 'prettier' },
         sql = { 'sqlfmt' },
+        r = { 'air' },
         rust = { 'rustfmt', lsp_format = 'fallback' },
 
         lua = { 'stylua' },
