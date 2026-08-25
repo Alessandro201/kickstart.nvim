@@ -211,7 +211,7 @@ do
   vim.keymap.set('n', '<Esc>', '<cmd>nohlsearch<CR>')
 
   -- Exit from insert mode with `jj`
-  vim.keymap.set('i', 'jj', '<Esc>')
+  vim.keymap.set('i', 'jj', '<Esc>', { desc = 'Exit insert mode' })
 
   -- Diagnostic Config & Keymaps
   --  See `:help vim.diagnostic.Opts`
@@ -412,6 +412,12 @@ do
         desc = 'Buffer Local Keymaps (which-key)',
       },
     },
+    config = function(_, opts)
+      local wk = require 'which-key'
+
+      wk.setup(opts)
+      wk.add(require('custom.keymap_catalog').native)
+    end,
   }
 
   -- [[ Colorscheme ]]
@@ -564,7 +570,10 @@ do
   -- See `:help telescope.builtin`
   local builtin = require 'telescope.builtin'
   vim.keymap.set('n', '<leader>sh', builtin.help_tags, { desc = '[S]earch [H]elp' })
-  vim.keymap.set('n', '<leader>sk', builtin.keymaps, { desc = '[S]earch [K]eymaps' })
+  -- The default settings does not list descriptions defined for native mappings.
+  -- The new one uses a merged list updating the default list with the new descriptions.
+  -- vim.keymap.set('n', '<leader>sk', builtin.keymaps, { desc = '[S]earch [K]eymaps' })
+  vim.keymap.set('n', '<leader>sk', function() require('custom.config.native-keymap-catalog').telescope() end, { desc = '[S]earch [K]eymaps' })
   vim.keymap.set('n', '<leader>sf', builtin.find_files, { desc = '[S]earch [F]iles' })
   vim.keymap.set('n', '<leader>ss', builtin.builtin, { desc = '[S]earch [S]elect Telescope' })
   vim.keymap.set({ 'n', 'v' }, '<leader>sw', builtin.grep_string, { desc = '[S]earch current [W]ord' })
@@ -1180,6 +1189,7 @@ do
   --
   --  Uncomment the following line and add your plugins to `lua/custom/plugins/*.lua` to get going.
   require 'custom.plugins'
+  -- require 'custom.plugins.which-key'
 end
 
 require 'custom.config.remap'

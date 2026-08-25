@@ -26,23 +26,34 @@ vim.pack.add {
   { src = 'https://github.com/Bishop-Fox/colorblocks.nvim' },
 
   { src = 'https://github.com/rafikdraoui/jj-diffconflicts' },
+
+  -- Syntax-aware text objects such as function.inner/function.outer
+  { src = 'https://github.com/nvim-treesitter/nvim-treesitter-textobjects', version = 'main' },
 }
 
 -- Plugin configurations (called after vim.pack.add so the plugins are reachable)
 
--- undotree
+---------------------------------------------------------------
+------------------------ undotree
+-- ------------------------------------------------------------
 vim.keymap.set('n', '<leader>u', vim.cmd.UndotreeToggle, { desc = 'Toggle [U]ndooTree' })
 
--- diffview
+---------------------------------------------------------------
+------------------------ diffview
+---------------------------------------------------------------
 require('diffview').setup {}
 vim.keymap.set({ 'n', 'v' }, '<leader>vo', '<Cmd>DiffviewOpen<CR>', { desc = 'Show repo [D]iff against index' })
 vim.keymap.set('n', '<leader>vh', '<Cmd>DiffviewFileHistory<CR>', { desc = 'Show repo [D]iff history' })
 vim.keymap.set('v', '<leader>vh', "<Esc><Cmd>'<,'>DiffviewFileHistory --follow<CR>", { desc = 'Show [D]iff history for current selection' })
 
--- cargo-expand
+---------------------------------------------------------------
+------------------------ cargo-expand
+---------------------------------------------------------------
 require('cargo-expand').setup()
 
--- colorblocks
+---------------------------------------------------------------
+------------------------ colorblocks
+---------------------------------------------------------------
 require('colorblocks').setup {
   symbol = '███████',
   virt_text_pos = 'eol', -- Position of virtual text: "eol", "overlay", etc.
@@ -58,3 +69,47 @@ vim.api.nvim_create_autocmd({ 'BufRead', 'BufNewFile', 'BufEnter' }, {
   pattern = '*',
   callback = function() vim.cmd 'ColorBlocksEnable' end,
 })
+
+---------------------------------------------------------------
+------------------------ treesitter text objects
+---------------------------------------------------------------
+require('nvim-treesitter-textobjects').setup {
+  select = {
+    lookahead = true,
+    selection_modes = {
+      ['@function.outer'] = 'V',
+      ['@conditional.outer'] = 'V',
+      ['@loop.outer'] = 'V',
+      ['@class.outer'] = 'V',
+    },
+  },
+}
+
+local select_textobject = require('nvim-treesitter-textobjects.select').select_textobject
+local function textobject(keys, capture, description)
+  vim.keymap.set({ 'x', 'o' }, keys, function() select_textobject(capture, 'textobjects') end, { desc = description })
+end
+
+-- These compose with operators: vif/vaf, dif/daf, cif/caf, yif/yaf, etc.
+textobject('if', '@function.inner', 'Inside function')
+textobject('af', '@function.outer', 'Around function')
+textobject('iC', '@class.inner', 'Inside class')
+textobject('aC', '@class.outer', 'Around class')
+textobject('iI', '@conditional.inner', 'Inside conditional')
+textobject('aI', '@conditional.outer', 'Around conditional')
+textobject('iL', '@loop.inner', 'Inside loop')
+textobject('aL', '@loop.outer', 'Around loop')
+textobject('iA', '@parameter.inner', 'Inside parameter')
+textobject('aA', '@parameter.outer', 'Around parameter')
+
+local ts_move = require 'nvim-treesitter-textobjects.move'
+
+-- Go to next/previous function start
+vim.keymap.set({ 'n', 'x', 'o' }, ']f', function() ts_move.goto_next_start('@function.outer', 'textobjects') end, { desc = 'Next function start' })
+
+vim.keymap.set({ 'n', 'x', 'o' }, '[f', function() ts_move.goto_previous_start('@function.outer', 'textobjects') end, { desc = 'Previous function start' })
+
+-- Go to next/previous function end
+vim.keymap.set({ 'n', 'x', 'o' }, ']F', function() ts_move.goto_next_end('@function.outer', 'textobjects') end, { desc = 'Next function end' })
+
+vim.keymap.set({ 'n', 'x', 'o' }, '[F', function() ts_move.goto_previous_end('@function.outer', 'textobjects') end, { desc = 'Previous function end' })
