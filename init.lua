@@ -728,8 +728,13 @@ do
       --  For example, in C this would take you to the header.
       map('gD', vim.lsp.buf.declaration, '[G]oto [D]eclaration')
 
-      -- Opens a popup that displays documentation about the word under your cursor
-      map('K', vim.lsp.buf.hover, 'Hover Documentation')
+      -- Opens a popup that displays documentation about the word under your cursor.
+      -- Adds a border to the popup to distinguish it from the background
+      map('K', function()
+        vim.lsp.buf.hover {
+          border = 'rounded',
+        }
+      end, 'Hover Documentation')
 
       -- The following two autocommands are used to highlight references of the
       -- word under your cursor when your cursor rests there for a little while.
@@ -1059,9 +1064,20 @@ do
     },
 
     completion = {
+      menu = {
+        border = 'rounded',
+      },
+
       -- By default, you may press `<c-space>` to show the documentation.
       -- Optionally, set `auto_show = true` to show the documentation after a delay.
-      documentation = { auto_show = true, auto_show_delay_ms = 100 },
+      documentation = {
+        auto_show = true,
+        auto_show_delay_ms = 100,
+        -- Add a border around the popup
+        window = {
+          border = 'rounded',
+        },
+      },
     },
 
     sources = {
@@ -1095,7 +1111,12 @@ do
     fuzzy = { implementation = 'prefer_rust_with_warning' },
 
     -- Shows a signature help window while you type arguments for a function
-    signature = { enabled = true },
+    signature = {
+      enabled = true,
+      window = {
+        border = 'rounded',
+      },
+    },
   }
 end
 
